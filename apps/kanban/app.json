@@ -1,0 +1,1 @@
+{"name": "Board", "blurb": "A three-column kanban board: drag cards between To do, Doing and Done, tag them with #words, and see what's gone stale.", "kind": "dashboard", "author": "Shell:B", "license": "MIT", "version": "1.0", "tags": ["tasks", "kanban", "planning"]}

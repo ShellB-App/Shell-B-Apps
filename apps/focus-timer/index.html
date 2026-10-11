@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus</title>
+<style>
+  :root { --bg: #14110f; --panel: #1d1916; --line: #2d2723; --text: #f3ece4; --muted: #9a8f85; --accent: #e07a4a; --accent-ink: #1a0d06; --rest: #5aa88f; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f6f1ea; --panel: #fffdf9; --line: #e3d9cf; --text: #241c16; --muted: #6f655c; --accent: #c9602f; --accent-ink: #fff5ee; --rest: #2f8c70; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.5 ui-sans-serif, system-ui, "Segoe UI", sans-serif; display: grid; place-items: center; padding: 24px; }
+  main { width: min(440px, 100%); display: grid; gap: 24px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .mode { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .mode button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .mode button[aria-pressed="true"] { background: var(--line); color: var(--text); }
+  .dial { position: relative; aspect-ratio: 1; display: grid; place-items: center; }
+  .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .dial circle { fill: none; stroke-width: 6; stroke-linecap: round; }
+  .track { stroke: var(--line); }
+  .arc { stroke: var(--accent); transition: stroke-dashoffset .9s linear, stroke .3s; }
+  body[data-mode="rest"] .arc { stroke: var(--rest); }
+  .time { font-size: clamp(56px, 18vw, 88px); font-weight: 300; letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .label { color: var(--muted); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin-top: 8px; }
+  .controls { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  body[data-mode="rest"] button.primary { background: var(--rest); color: #06211a; }
+  button.primary:hover { filter: brightness(1.08); }
+  button.quiet { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font: inherit; cursor: pointer; }
+  button.quiet:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .log { display: flex; flex-wrap: wrap; gap: 6px; min-height: 22px; }
+  .dot { width: 12px; height: 12px; border-radius: 999px; background: var(--accent); opacity: .9; }
+  .dot.rest { background: var(--rest); }
+  .foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+  details { font-size: 13px; color: var(--muted); }
+  details label { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; }
+  details input { width: 72px; background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 8px; font: inherit; text-align: right; }
+</style>
+</head>
+<body data-mode="focus">
+<main>
+  <header>
+    <h1>Focus</h1>
+    <div class="mode" role="group" aria-label="Mode">
+      <button id="mFocus" aria-pressed="true">Focus</button>
+      <button id="mRest" aria-pressed="false">Rest</button>
+    </div>
+  </header>
+
+  <div class="dial">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="track" cx="100" cy="100" r="92"></circle>
+      <circle class="arc" id="arc" cx="100" cy="100" r="92"></circle>
+    </svg>
+    <div style="text-align:center">
+      <div class="time" id="time">25:00</div>
+      <div class="label" id="label">ready</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="primary" id="go">Start</button>
+    <button class="quiet" id="skip" title="Skip to the next block">Skip</button>
+    <button class="quiet" id="reset" title="Reset this block">Reset</button>
+  </div>
+
+  <div class="log" id="log" aria-label="Blocks done today"></div>
+  <div class="foot"><span id="today">0 blocks today</span><span id="streak"></span></div>
+
+  <details>
+    <summary>Lengths</summary>
+    <label>Focus (minutes) <input id="lenFocus" type="number" min="1" max="120"></label>
+    <label>Rest (minutes) <input id="lenRest" type="number" min="1" max="60"></label>
+    <label>Long rest every 4th block <input id="lenLong" type="number" min="1" max="90"></label>
+  </details>
+</main>
+
+<script>
+(() => {
+  const KEY = 'focus-timer';
+  const CIRC = 2 * Math.PI * 92;
+  const $ = id => document.getElementById(id);
+  const arc = $('arc'); arc.style.strokeDasharray = CIRC;
+
+  const today = () => new Date().toISOString().slice(0, 10);
+  let state = { focus: 25, rest: 5, long: 15, day: today(), done: [] };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) state = { ...state, ...s }; } catch {}
+  if (state.day !== today()) { state.day = today(); state.done = []; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+
+  let mode = 'focus', total = 0, left = 0, ticking = null, endAt = 0;
+
+  const minutes = () => mode === 'focus' ? state.focus : ((state.done.filter(d => d === 'focus').length % 4 === 0 && state.done.length) ? state.long : state.rest);
+  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  function draw() {
+    $('time').textContent = fmt(Math.max(0, Math.round(left)));
+    arc.style.strokeDashoffset = CIRC * (1 - (total ? left / total : 1));
+    $('label').textContent = ticking ? (mode === 'focus' ? 'focusing' : 'resting') : (left < total ? 'paused' : 'ready');
+    $('go').textContent = ticking ? 'Pause' : (left < total ? 'Resume' : 'Start');
+    document.body.dataset.mode = mode;
+    $('mFocus').setAttribute('aria-pressed', mode === 'focus');
+    $('mRest').setAttribute('aria-pressed', mode === 'rest');
+    document.title = ticking ? `${fmt(Math.round(left))} · ${mode}` : 'Focus';
+    const f = state.done.filter(d => d === 'focus').length;
+    $('log').innerHTML = state.done.map(d => `<span class="dot ${d}"></span>`).join('');
+    $('today').textContent = `${f} block${f === 1 ? '' : 's'} today`;
+    $('streak').textContent = f ? `${f * state.focus} min of focus` : '';
+  }
+
+  function load(m) { mode = m; total = left = minutes() * 60; clearInterval(ticking); ticking = null; draw(); }
+
+  function tick() {
+    left = (endAt - Date.now()) / 1000;
+    if (left <= 0) {
+      left = 0; clearInterval(ticking); ticking = null;
+      state.done.push(mode); save();
+      chime();
+      load(mode === 'focus' ? 'rest' : 'focus');
+      return;
+    }
+    draw();
+  }
+
+  function chime() {
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      [0, .18, .36].forEach((t, i) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.value = mode === 'focus' ? [660, 880, 990][i] : [523, 440, 392][i];
+        g.gain.setValueAtTime(0.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(0.2, ac.currentTime + t + .02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + .25);
+        o.connect(g).connect(ac.destination); o.start(ac.currentTime + t); o.stop(ac.currentTime + t + .3);
+      });
+    } catch {}
+  }
+
+  $('go').onclick = () => {
+    if (ticking) { clearInterval(ticking); ticking = null; draw(); return; }
+    endAt = Date.now() + left * 1000; ticking = setInterval(tick, 250); draw();
+  };
+  $('skip').onclick = () => load(mode === 'focus' ? 'rest' : 'focus');
+  $('reset').onclick = () => load(mode);
+  $('mFocus').onclick = () => load('focus');
+  $('mRest').onclick = () => load('rest');
+  for (const [id, key] of [['lenFocus', 'focus'], ['lenRest', 'rest'], ['lenLong', 'long']]) {
+    $(id).value = state[key];
+    $(id).onchange = e => { const v = Math.max(1, Math.min(120, +e.target.value || 1)); state[key] = v; e.target.value = v; save(); if (!ticking) load(mode); };
+  }
+  addEventListener('keydown', e => { if (e.key === ' ' && e.target.tagName !== 'INPUT') { e.preventDefault(); $('go').click(); } });
+  load('focus');
+})();
+</script>
+</body>
+</html>

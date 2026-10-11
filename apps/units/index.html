@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Units</title>
+<style>
+  :root { --bg: #0f1412; --panel: #151c19; --line: #243029; --text: #e9f0ec; --muted: #8aa094; --accent: #58c79a; --ink: #06130d; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f2f6f3; --panel: #ffffff; --line: #d8e2dc; --text: #16211b; --muted: #5f7368; --accent: #1f8a5e; --ink: #f1fbf6; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.5 ui-sans-serif, system-ui, "Segoe UI", sans-serif; display: grid; place-items: start center; padding: 24px; }
+  main { width: min(560px, 100%); display: grid; gap: 20px; }
+  h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; }
+  nav button { background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  nav button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: stretch; }
+  .field { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 6px; }
+  .field:focus-within { border-color: var(--accent); }
+  input { width: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 30px; font-weight: 300; letter-spacing: -.02em; outline: none; font-variant-numeric: tabular-nums; }
+  select { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 14px; padding: 0 14px; font: inherit; min-width: 150px; cursor: pointer; }
+  select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .swap { justify-self: center; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; width: 36px; height: 36px; font: inherit; cursor: pointer; }
+  .swap:hover { color: var(--text); border-color: var(--muted); }
+  .hint { font-size: 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  td { padding: 7px 4px; border-top: 1px solid var(--line); } td:last-child { text-align: right; color: var(--muted); }
+  tr:hover td { color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Units</h1>
+  <nav id="cats" aria-label="Category"></nav>
+  <div class="row"><div class="field"><input id="a" inputmode="decimal" value="1" aria-label="From value"><span class="hint" id="aName"></span></div><select id="ua" aria-label="From unit"></select></div>
+  <button class="swap" id="swap" title="Swap">⇅</button>
+  <div class="row"><div class="field"><input id="b" inputmode="decimal" aria-label="To value"><span class="hint" id="bName"></span></div><select id="ub" aria-label="To unit"></select></div>
+  <table id="all" aria-label="The same amount in every unit"></table>
+</main>
+<script>
+(() => {
+  // factor = how many base units one of this unit is; temperature uses functions instead
+  const CATS = {
+    Length: { base: 'metre', units: { millimetre: 1e-3, centimetre: 1e-2, metre: 1, kilometre: 1e3, inch: 0.0254, foot: 0.3048, yard: 0.9144, mile: 1609.344, 'nautical mile': 1852, 'light-year': 9.4607e15 } },
+    Mass: { base: 'kilogram', units: { gram: 1e-3, kilogram: 1, tonne: 1e3, ounce: 0.028349523125, pound: 0.45359237, stone: 6.35029318, 'US ton': 907.18474 } },
+    Volume: { base: 'litre', units: { millilitre: 1e-3, litre: 1, 'cubic metre': 1e3, teaspoon: 0.00492892, tablespoon: 0.0147868, 'fluid ounce (US)': 0.0295735, 'cup (US)': 0.236588, 'pint (US)': 0.473176, 'quart (US)': 0.946353, 'gallon (US)': 3.78541, 'pint (UK)': 0.568261, 'gallon (UK)': 4.54609 } },
+    Area: { base: 'square metre', units: { 'square metre': 1, hectare: 1e4, 'square kilometre': 1e6, 'square foot': 0.09290304, 'square yard': 0.83612736, acre: 4046.8564224, 'square mile': 2589988.110336 } },
+    Speed: { base: 'm/s', units: { 'm/s': 1, 'km/h': 1 / 3.6, mph: 0.44704, knot: 0.514444, 'ft/s': 0.3048, mach: 340.29 } },
+    Temperature: { base: 'celsius', fn: true, units: {
+      celsius: [c => c, c => c], fahrenheit: [f => (f - 32) * 5 / 9, c => c * 9 / 5 + 32], kelvin: [k => k - 273.15, c => c + 273.15] } },
+    Energy: { base: 'joule', units: { joule: 1, kilojoule: 1e3, calorie: 4.184, kilocalorie: 4184, 'watt-hour': 3600, 'kilowatt-hour': 3.6e6, BTU: 1055.06 } },
+    Pressure: { base: 'pascal', units: { pascal: 1, kilopascal: 1e3, bar: 1e5, atmosphere: 101325, psi: 6894.757, mmHg: 133.322 } },
+    Data: { base: 'byte', units: { bit: 0.125, byte: 1, kilobyte: 1e3, megabyte: 1e6, gigabyte: 1e9, terabyte: 1e12, kibibyte: 1024, mebibyte: 1048576, gibibyte: 1073741824 } },
+    Time: { base: 'second', units: { millisecond: 1e-3, second: 1, minute: 60, hour: 3600, day: 86400, week: 604800, 'year (365 d)': 31536000 } },
+  };
+  const DEFAULTS = { Length: ['kilometre', 'mile'], Mass: ['kilogram', 'pound'], Volume: ['litre', 'gallon (US)'], Area: ['hectare', 'acre'], Speed: ['km/h', 'mph'], Temperature: ['celsius', 'fahrenheit'], Energy: ['kilocalorie', 'kilojoule'], Pressure: ['bar', 'psi'], Data: ['gigabyte', 'gibibyte'], Time: ['hour', 'minute'] };
+  const $ = id => document.getElementById(id);
+  let cat = 'Length', lock = false;
+  try { const s = JSON.parse(localStorage.getItem('units.last') || 'null'); if (s && CATS[s.cat]) { cat = s.cat; DEFAULTS[cat] = [s.a, s.b]; } } catch {}
+
+  const toBase = (v, u) => CATS[cat].fn ? CATS[cat].units[u][0](v) : v * CATS[cat].units[u];
+  const fromBase = (v, u) => CATS[cat].fn ? CATS[cat].units[u][1](v) : v / CATS[cat].units[u];
+  const fmt = v => !isFinite(v) ? '' : Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-6 && v !== 0) ? v.toExponential(4) : (+v.toPrecision(8)).toLocaleString(undefined, { maximumFractionDigits: 8 });
+  const parse = s => { const n = parseFloat(String(s).replace(/,/g, '').replace(/\s/g, '')); return isNaN(n) ? NaN : n; };
+
+  function fill() {
+    const units = Object.keys(CATS[cat].units);
+    for (const sel of ['ua', 'ub']) $(sel).innerHTML = units.map(u => `<option>${u}</option>`).join('');
+    const [a, b] = DEFAULTS[cat]; $('ua').value = units.includes(a) ? a : units[0]; $('ub').value = units.includes(b) ? b : units[1] || units[0];
+    $('cats').innerHTML = Object.keys(CATS).map(c => `<button aria-pressed="${c === cat}" data-cat="${c}">${c}</button>`).join('');
+    convert('a');
+  }
+  function convert(from) {
+    if (lock) return; lock = true;
+    const src = from === 'a' ? $('a') : $('b'), dst = from === 'a' ? $('b') : $('a');
+    const su = from === 'a' ? $('ua').value : $('ub').value, du = from === 'a' ? $('ub').value : $('ua').value;
+    const v = parse(src.value);
+    const base = toBase(v, su);
+    dst.value = fmt(fromBase(base, du));
+    $('aName').textContent = $('ua').value; $('bName').textContent = $('ub').value;
+    $('all').innerHTML = Object.keys(CATS[cat].units).map(u => `<tr><td>${fmt(fromBase(base, u))}</td><td>${u}</td></tr>`).join('');
+    try { localStorage.setItem('units.last', JSON.stringify({ cat, a: $('ua').value, b: $('ub').value })); } catch {}
+    lock = false;
+  }
+  $('a').oninput = () => convert('a'); $('b').oninput = () => convert('b');
+  $('ua').onchange = () => convert('a'); $('ub').onchange = () => convert('a');
+  $('swap').onclick = () => { const u = $('ua').value; $('ua').value = $('ub').value; $('ub').value = u; $('a').value = $('b').value; convert('a'); };
+  $('cats').onclick = e => { const b = e.target.closest('button[data-cat]'); if (b) { cat = b.dataset.cat; fill(); } };
+  fill();
+})();
+</script>
+</body>
+</html>

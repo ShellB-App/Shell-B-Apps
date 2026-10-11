@@ -1,0 +1,86 @@
+{
+ "format": 1,
+ "kind": "app",
+ "items": [
+  {
+   "id": "kanban",
+   "name": "Board",
+   "blurb": "A three-column kanban board: drag cards between To do, Doing and Done, tag them with #words, and see what's gone stale.",
+   "kind": "dashboard",
+   "entry": "index.html",
+   "author": "Shell:B",
+   "license": "MIT",
+   "version": "1.0",
+   "tags": [
+    "tasks",
+    "kanban",
+    "planning"
+   ],
+   "path": "apps/kanban",
+   "preview": null,
+   "files": [
+    "index.html"
+   ]
+  },
+  {
+   "id": "focus-timer",
+   "name": "Focus",
+   "blurb": "A Pomodoro-style focus timer with a dial, a chime, and a row of dots for the blocks you finished today.",
+   "kind": "dashboard",
+   "entry": "index.html",
+   "author": "Shell:B",
+   "license": "MIT",
+   "version": "1.0",
+   "tags": [
+    "productivity",
+    "timer",
+    "focus"
+   ],
+   "path": "apps/focus-timer",
+   "preview": null,
+   "files": [
+    "index.html"
+   ]
+  },
+  {
+   "id": "notebook",
+   "name": "Notebook",
+   "blurb": "Markdown notes with a live preview and search. Everything stays in the browser; nothing is uploaded.",
+   "kind": "dashboard",
+   "entry": "index.html",
+   "author": "Shell:B",
+   "license": "MIT",
+   "version": "1.0",
+   "tags": [
+    "notes",
+    "markdown",
+    "writing"
+   ],
+   "path": "apps/notebook",
+   "preview": null,
+   "files": [
+    "index.html"
+   ]
+  },
+  {
+   "id": "units",
+   "name": "Units",
+   "blurb": "A unit converter for length, mass, volume, area, speed, temperature, energy, pressure, data and time, with every unit at once.",
+   "kind": "dashboard",
+   "entry": "index.html",
+   "author": "Shell:B",
+   "license": "MIT",
+   "version": "1.0",
+   "tags": [
+    "converter",
+    "reference",
+    "tools"
+   ],
+   "path": "apps/units",
+   "preview": null,
+   "files": [
+    "index.html"
+   ]
+  }
+ ]
+}
