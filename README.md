@@ -1,9 +1,9 @@
 # Shell:B Apps
 
-[![Validate](https://github.com/EveAeternam/Shell-B-Apps/actions/workflows/validate.yml/badge.svg)](https://github.com/EveAeternam/Shell-B-Apps/actions/workflows/validate.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Validate](https://github.com/ShellB-App/Shell-B-Apps/actions/workflows/validate.yml/badge.svg)](https://github.com/ShellB-App/Shell-B-Apps/actions/workflows/validate.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Community apps for [Shell:B](https://github.com/EveAeternam/Shell-B), the local-first AI workspace.
-Part of the family with [Shell-B-Themes](https://github.com/EveAeternam/Shell-B-Themes), [Shell-B-Screensavers](https://github.com/EveAeternam/Shell-B-Screensavers), [Shell-B-Agents](https://github.com/EveAeternam/Shell-B-Agents) and [Shell-B-Studio-Templates](https://github.com/EveAeternam/Shell-B-Studio-Templates).
+Community apps for [Shell:B](https://github.com/ShellB-App/Shell-B), the local-first AI workspace.
+Part of the family with [Shell-B-Themes](https://github.com/ShellB-App/Shell-B-Themes), [Shell-B-Screensavers](https://github.com/ShellB-App/Shell-B-Screensavers), [Shell-B-Agents](https://github.com/ShellB-App/Shell-B-Agents) and [Shell-B-Studio-Templates](https://github.com/ShellB-App/Shell-B-Studio-Templates).
 
 A Shell:B app is **a finished Studio project**: a folder of HTML, CSS, JavaScript and assets that does one thing well
 and runs in Shell:B's sandboxed preview frame, with no network. Where a Studio template is a starting point for the
@@ -84,7 +84,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the pull request checklist.
 
 ## Other collections
 
-Shell:B installs from the whole family: [Shell-B-Themes](https://github.com/EveAeternam/Shell-B-Themes), [Shell-B-Screensavers](https://github.com/EveAeternam/Shell-B-Screensavers), [Shell-B-Agents](https://github.com/EveAeternam/Shell-B-Agents) and [Shell-B-Studio-Templates](https://github.com/EveAeternam/Shell-B-Studio-Templates) work the same way, with a validator, CI and a one-screen checklist each. Found a bug in the app itself? That goes to [Shell-B issues](https://github.com/EveAeternam/Shell-B/issues); questions and show-and-tell to [Discussions](https://github.com/EveAeternam/Shell-B/discussions).
+Shell:B installs from the whole family: [Shell-B-Themes](https://github.com/ShellB-App/Shell-B-Themes), [Shell-B-Screensavers](https://github.com/ShellB-App/Shell-B-Screensavers), [Shell-B-Agents](https://github.com/ShellB-App/Shell-B-Agents) and [Shell-B-Studio-Templates](https://github.com/ShellB-App/Shell-B-Studio-Templates) work the same way, with a validator, CI and a one-screen checklist each. Found a bug in the app itself? That goes to [Shell-B issues](https://github.com/ShellB-App/Shell-B/issues); questions and show-and-tell to [Discussions](https://github.com/ShellB-App/Shell-B/discussions).
 
 ## License
 
